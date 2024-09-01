@@ -7,7 +7,7 @@ It forwards the messages received from the MIDI controller to a host device, whe
 
 ## Server module
 
-The server module is placed on the host device, like a computer running a DAW and it receives MIDI messages from the client module.
+The server module is placed on the host device (like a computer running a DAW) and it receives MIDI messages from the client module.
 
 ## Connection
 
