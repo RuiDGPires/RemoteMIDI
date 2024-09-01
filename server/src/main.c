@@ -51,7 +51,6 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    time_t t;
     while (1) {
         // Receive a message from the client
         valread = read(new_socket, buffer, sizeof(Message));
@@ -60,12 +59,13 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        t = time(NULL);
-        printf("[%s] Client: %x\n", ctime(&t), buffer[0]);
+        if (*buffer == 0)
+            break;
+        
+        printf("Client: %x\n", buffer[0]);
     }
 
     // Close the socket
     close(new_socket);
     return 0;
 }
-

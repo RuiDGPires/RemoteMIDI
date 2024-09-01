@@ -5,20 +5,33 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include  <signal.h>
 #include "tcp.h"
+
+static struct _server_t *server = NULL;
+
+void INThandler(int sig);
 
 struct _server_t {
    int sock;
    struct sockaddr_in addr;
    char buffer[1024];
+   cleanup_t cleanup;
 };
 
-void tcp_send(struct _server_t *server, message_t message) {
+void tcp_send(message_t message) {
     send(server->sock, &message, sizeof(message), 0);
 }
 
-struct _server_t *tcp_connect(char addr[], int port) {
-    struct _server_t *server = (struct _server_t *) malloc(sizeof(struct _server_t));
+void tcp_connect(char addr[], int port, cleanup_t cleanup) {
+    if (server != NULL) {
+        perror("Connection has already been established");
+        exit(EXIT_FAILURE);
+    }
+
+    signal(SIGINT, INThandler);
+    server = (struct _server_t *) malloc(sizeof(struct _server_t));
+    server->cleanup = cleanup;
     
     if (server == NULL) {
         perror("Memory allocation failed");
@@ -48,18 +61,26 @@ struct _server_t *tcp_connect(char addr[], int port) {
         exit(EXIT_FAILURE);
     }
 
-    return server;
+    printf("Connected to %s:%d\n", addr, port);
 }
 
-void tcp_disconnect(struct _server_t **server) {
-    close((*server)->sock);
-    free(*server);
-    *server = NULL;
+void tcp_disconnect() {
+    if (server == NULL) {
+        perror("Connection hasn't been established");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Disconnecting\n");
+    tcp_send(0);
+    close(server->sock);
+    free(server);
+    server = NULL;
 }
 
-//int main() {
-//    server_t *server = tcp_connect(ADDR, PORT);
-//    tcp_send(server, "Hello\0");
-//    tcp_disconnect(&server);
-//    return 0;
-//}
+void INThandler(int sig) {
+    server->cleanup(); 
+    tcp_disconnect();
+    signal(sig, SIG_IGN);
+    signal(SIGINT, INThandler);
+    exit(0);
+}
