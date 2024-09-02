@@ -38,6 +38,7 @@ int main() {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
+    printf("Server running on %s", inet_ntoa(*((struct in_addr*) &address)));
 
     // Listen for connections
     if (listen(server_fd, 3) < 0) {

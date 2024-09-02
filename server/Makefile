@@ -2,7 +2,7 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))
 
 BUILD_FOLDER:=$(current_dir)/build
-TARGET:=client
+TARGET:=server
 C_FILES:=$(wildcard $(current_dir)/src/*.c)
 H_FILES:=$(wildcard $(current_dir)/src/*.h)
 CC:=gcc

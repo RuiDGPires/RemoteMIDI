@@ -1,3 +1,7 @@
-[submodule "client/CCLArgs"]
-	path = client/CCLArgs
+[submodule "common/CCLArgs"]
+	path = common/CCLArgs
 	url = https://github.com/RuiDGPires/CCLArgs
+
+[submodule "common/portmidi"]
+	path = common/portmidi
+	url = https://github.com/PortMidi/portmidi
