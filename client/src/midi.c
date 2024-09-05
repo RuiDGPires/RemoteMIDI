@@ -3,32 +3,33 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
-#include <pm_common/portmidi.h>
-#include <pm_common/pmutil.h>
-#include <porttime/porttime.h>
+#include <portmidi/pm_common/portmidi.h>
+#include <portmidi/pm_common/pmutil.h>
+#include <portmidi/porttime/porttime.h>
 #include "tcp.h"
 #include "midi.h"
 
 #define MIDI_SYSEX 0xf0
 #define MIDI_EOX 0xf7
 
+static int midi_initialized = FALSE;
 /* active is set true when midi processing should start */
-int active = FALSE;
+static int active = FALSE;
 /* process_midi_exit_flag is set when the timer thread shuts down */
-int process_midi_exit_flag;
+static int process_midi_exit_flag;
 
-PmStream *midi_in;
-PmStream *midi_out;
+static PmStream *midi_in;
+static PmStream *midi_out;
 
 /* shared queues */
 #define IN_QUEUE_SIZE 1024
 #define OUT_QUEUE_SIZE 1024
-PmQueue *in_queue;
-PmQueue *out_queue;
-PmTimestamp current_timestamp = 0;
-int thru_sysex_in_progress = FALSE;
-int app_sysex_in_progress = FALSE;
-PmTimestamp last_timestamp = 0;
+static PmQueue *in_queue;
+static PmQueue *out_queue;
+static PmTimestamp current_timestamp = 0;
+static int thru_sysex_in_progress = FALSE;
+static int app_sysex_in_progress = FALSE;
+static PmTimestamp last_timestamp = 0;
 
 
 /* time proc parameter for Pm_MidiOpen */
@@ -178,6 +179,7 @@ void initialize(int input_device)
        error checking to this code.
      */
 
+    printf("[Initializing]");
     const PmDeviceInfo *info;
     int id;
 
@@ -188,9 +190,11 @@ void initialize(int input_device)
     assert(out_queue != NULL);
 
     /* always start the timer before you start midi */
+    printf("Starting timer\n");
     Pt_Start(1, &process_midi, 0); /* start a timer with millisecond accuracy */
     /* the timer will call our function, process_midi() every millisecond */
     
+    printf("Initializing portmidi\n");
     Pm_Initialize();
 
     id = Pm_GetDefaultOutputDeviceID();
@@ -232,6 +236,7 @@ void initialize(int input_device)
                       is a shared variable without synchronization, but
                       this simple assignment is safe */
 
+    midi_initialized = TRUE;
 }
 
 
@@ -298,5 +303,6 @@ quit_now:
 }
 
 void midi_finalize(void) {
+    if (!midi_initialized) return;
     finalize();
 }

@@ -1,7 +1,7 @@
 #ifndef __MIDI_H__
 #define __MIDI_H__
 
-#include <pm_common/portmidi.h>
+#include <portmidi/pm_common/portmidi.h>
 
 typedef void (*MidiProcess)(PmEvent, void*);
 

@@ -1,11 +1,13 @@
 #include <string.h>
 #include <stdio.h>
-#include <cclargs.h>
-#include <pm_common/portmidi.h>
 #include "tcp.h"
 #include "midi.h"
+#include "config.h"
 
 #define DEFAULT_MIDI_INPUT_ID 1
+#define DEFAULT_SERVER_ADDR "192.168.1.8"
+#define DEFAULT_SERVER_PORT 8080
+
 #define AMPERO_CONTROL_ID 3
 #define AMPERO_CONTROL_NAME "Ampero Control MIDI 1"
 
@@ -17,34 +19,6 @@ void print_info_if_verbose(int verbose, int id, const PmDeviceInfo *info){
     printf("input: %s\n", info->input ? "True" : "False");
     printf("output: %s\n", info->output ? "True" : "False");
     printf("virtual: %s\n", info->is_virtual ? "True" : "False");
-}
-
-typedef struct {
-    int verbose;
-    char *midi_device_name;
-    int midi_device_id;
-    int list;
-    int allow_all;
-} args_t;
-
-args_t parse_args(ARGS) {
-    args_t args = (args_t) {
-        .verbose = FALSE,
-        .midi_device_name = NULL,
-        .midi_device_id = -1,
-        .list = FALSE,
-        .allow_all = FALSE,
-    };
-
-    BEGIN_PARSE_ARGS("")
-        ARG_FLAG(args.verbose, "v", "verbose")
-        ARG_STRING(args.midi_device_name, "--name")
-        ARG_INT(args.midi_device_id, "--id")
-        ARG_FLAG(args.list, "l", "list")
-        ARG_FLAG(args.allow_all, "a", "all") // Bypass input only filter
-    END_PARSE_ARGS
-
-    return args;
 }
 
 int search(args_t args) {
@@ -105,7 +79,18 @@ int main(int argc, char *argv[]) {
 
     int midi_input_device_id = search(args);
 
-    tcp_connect("192.168.1.8", 8080, midi_finalize);
+    if (args.server_addr == NULL) {
+        args.server_addr = DEFAULT_SERVER_ADDR;
+        printf("No server address provided, defaulting to %s\n", args.server_addr);
+    }
+
+    if (args.server_port == -1) {
+        args.server_port = DEFAULT_SERVER_PORT;
+        printf("No server port provided, defaulting to %d\n", args.server_port);
+    }
+
+    printf("Connecting to %s:%d\n", args.server_addr, args.server_port);
+    tcp_connect(args.server_addr, args.server_port, midi_finalize);
 
     midi_context_t ctx = (midi_context_t){
         .midi_input_device_id = midi_input_device_id,

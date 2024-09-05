@@ -9,6 +9,7 @@
 #include "tcp.h"
 
 static struct _server_t *server = NULL;
+static int connected;
 
 void INThandler(int sig);
 
@@ -38,6 +39,7 @@ void tcp_connect(char addr[], int port, cleanup_t cleanup) {
         exit(EXIT_FAILURE);
     }
 
+    printf("Creating socket\n");
     // Create socket
     if ((server->sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Socket creation failed");
@@ -48,6 +50,7 @@ void tcp_connect(char addr[], int port, cleanup_t cleanup) {
     // Set server address
     server->addr.sin_family = AF_INET;
     server->addr.sin_port = htons(port);
+    printf("Setting address\n");
     if (inet_pton(AF_INET, addr, &(server->addr.sin_addr)) <= 0) {
         perror("Invalid address/Address not supported");
         free(server);
@@ -55,16 +58,19 @@ void tcp_connect(char addr[], int port, cleanup_t cleanup) {
     }
 
     // Connect to server
+    printf("Establishing connection\n");
     if (connect(server->sock, (struct sockaddr *)&(server->addr), sizeof(server->addr)) < 0) {
         perror("Connect failed");
         free(server);
         exit(EXIT_FAILURE);
     }
 
+    connected = 1;
     printf("Connected to %s:%d\n", addr, port);
 }
 
 void tcp_disconnect() {
+    if (!connected) return;
     if (server == NULL) {
         perror("Connection hasn't been established");
         exit(EXIT_FAILURE);
@@ -75,6 +81,7 @@ void tcp_disconnect() {
     close(server->sock);
     free(server);
     server = NULL;
+    connected = 0;
 }
 
 void INThandler(int sig) {

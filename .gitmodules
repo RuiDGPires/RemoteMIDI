@@ -5,3 +5,6 @@
 [submodule "common/portmidi"]
 	path = common/portmidi
 	url = https://github.com/PortMidi/portmidi
+[submodule "common/toml-c"]
+	path = common/toml-c
+	url = https://github.com/arp242/toml-c
