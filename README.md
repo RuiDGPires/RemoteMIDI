@@ -1,4 +1,4 @@
-# Midi Loopback and Forward
+# RemoteMIDI
 
 ![diagram](images/diagram.png)
 
