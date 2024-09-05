@@ -1,5 +1,7 @@
 # Midi Loopback and Forward
 
+![diagram](images/diagram.png)
+
 ## Client module
 
 The client module is placed on a Raspberry Pi connected to a MIDI controller.
@@ -7,7 +9,7 @@ It forwards the messages received from the MIDI controller to a host device, whe
 
 ## Server module
 
-The server module is placed on the host device (like a computer running a DAW) and it receives MIDI messages from the client module.
+The server module is placed on the host device and it receives MIDI messages from the client module.
 
 ## Connection
 
