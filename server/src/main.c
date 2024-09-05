@@ -1,72 +1,22 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <time.h>
+#include <portmidi/pm_common/portmidi.h>
+#include "tcp.h"
+#include "midi.h"
 
 #define PORT 8080
-typedef int32_t Message;
+
+void handle_message(Message message) {
+    printf("Client: %x\n", message);
+    midi_send(message);
+}
 
 int main() {
-    int server_fd, new_socket, valread;
-    struct sockaddr_in address;
-    int opt = 1;
-    int addrlen = sizeof(address);
-    Message buffer[1] = {0};
-
-    // Create socket
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("Socket creation failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Set socket options
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        perror("setsockopt failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Bind socket to address
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
-
-    if (bind(server_fd, (struct sockaddr *)&address, addrlen) < 0) {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    printf("Server running on %s", inet_ntoa(*((struct in_addr*) &address)));
-
-    // Listen for connections
-    if (listen(server_fd, 3) < 0) {
-        perror("listen failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Accept connections
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
-        perror("accept failed");
-        exit(EXIT_FAILURE);
-    }
-
+    int id = Pm_GetDefaultOutputDeviceID();
+    midi_initialize(id);
+    tcp_open_server(PORT);
     while (1) {
-        // Receive a message from the client
-        valread = read(new_socket, buffer, sizeof(Message));
-        if (valread < 0) {
-            perror("read failed");
-            exit(EXIT_FAILURE);
-        }
-
-        if (*buffer == 0)
-            break;
-        
-        printf("Client: %x\n", buffer[0]);
+        tcp_receive(handle_message);
     }
-
-    // Close the socket
-    close(new_socket);
-    return 0;
+    tcp_close_server();
+    midi_finalize();
 }
