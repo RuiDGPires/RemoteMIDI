@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <netdb.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -35,7 +37,20 @@ void tcp_open_server(int port) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server running on %s:%d\n", inet_ntoa(*((struct in_addr*) &address)), port);
+
+    char hostbuffer[256];
+    char *ip;
+    struct hostent *host_entry;
+    int hostname = gethostname(hostbuffer, sizeof(hostbuffer));
+    // To retrieve host information
+    host_entry = gethostbyname(hostbuffer);
+
+    // To convert an Internet network
+    // address into ASCII string
+    ip = inet_ntoa(*((struct in_addr*)
+                        host_entry->h_addr_list[0]));
+
+    printf("Server running on %s:%d\n", ip, port);
 }
 
 void tcp_receive(void (*callback)(Message)) {
